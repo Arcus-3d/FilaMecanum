@@ -1,6 +1,7 @@
 // FilaMecanum OpenSCAD source code
 // Project Home: https://hackaday.io/project/165330
 // Author: https://hackaday.io/daren
+// Version: 3.2
 
 clearance=0.2; 
 filament_count=60; // number of filaments
