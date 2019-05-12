@@ -1,6 +1,6 @@
 ## FilaMecanum
 3D printed hub, filament tires, Mecanum motion.
-![filamecanum.png](images/filamecanum.png)
+![filamecanum.jpg](images/filamecanum.jpg)
 
 The [FilaMecanum](https://hackaday.io/project/165330) project is open source hardware. 
 This github repository hosts the [OpenSCAD](http://www.openscad.org) source and eventually, the rendered STL images for quick access.
