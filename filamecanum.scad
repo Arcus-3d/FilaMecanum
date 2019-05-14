@@ -1,18 +1,21 @@
 // FilaMecanum OpenSCAD source code
 // Project Home: https://hackaday.io/project/165330
 // Author: https://hackaday.io/daren
-// Version: 3.2
+// Version: 3.3
 
 clearance=0.2; 
+extra=0.01;
+
+
 filament_count=60; // number of filaments
 $fn=filament_count; // circle complexity, if a multiple of filament count, things line up nicely
 wall_thickness=2.0; // for the strongest part, keep this as a multiple of nozzle size
-filament_r=3.15/2; // filament radius, oversize as it's reduced to 6 sides.
-filament_depth=filament_r*4; // filament depth
+filament_r=3.18/2; // filament radius, oversize this by like 20% as it's reduced to 6 sides.
+filament_depth=filament_r*4; // filament insertion depth
 
 rim_ir=72/2+clearance; // rim inside radius
 rim_or=rim_ir+wall_thickness; // rim outside radius
-rim_er=rim_ir+filament_depth+wall_thickness/2; // rim edge radius
+rim_er=rim_ir+filament_depth+wall_thickness; // rim edge radius
 rim_h=rim_or*1.25; // rim height, defined as multiple of rim_or, and so the aspect ratio.
 hub_offset=6; // offset for hub mount flange to allow for hub thickness
 
@@ -23,11 +26,9 @@ rim_angle=atan((rim_er*2)/(rim_h*0.85));
 rim_edge_z=sin(rim_angle)*(filament_r*2+wall_thickness*1.0);
 rim_edge_x=cos(rim_angle)*(filament_r*2+wall_thickness*1.0);
 
-extra=0.01;
-clearance=0.2; 
 
 rim();
-fit();
+//fit();
 module fit() {
 	translate([rim_h,0,rim_h/2]) rotate([45,0,0]) scale([1,1.44,1]) cylinder(r=rim_h/2,h=1,center=true);
 }
@@ -35,14 +36,14 @@ module rim() {
 	difference() {
 		translate([0,0,rim_h/2]) rotate_extrude(convexity=10) polygon(points=[
 			[rim_ir,rim_h/2-wall_thickness*1.5],
-			[rim_er-rim_edge_x-wall_thickness,rim_h/2],
+			[rim_er-rim_edge_x-wall_thickness*1.5,rim_h/2],
 			[rim_er-rim_edge_x,rim_h/2],
 			[rim_er,rim_h/2-rim_edge_z],
 			[rim_or,rim_h/2-rim_edge_z*2],
 			[rim_or,-rim_h/2+rim_edge_z*2],
 			[rim_er,-rim_h/2+rim_edge_z],
 			[rim_er-rim_edge_x,-rim_h/2],
-			[rim_er-rim_edge_x-wall_thickness,-rim_h/2],
+			[rim_er-rim_edge_x-wall_thickness*1.5,-rim_h/2],
 			[rim_ir,-rim_h/2+wall_thickness*1.5],
 			[rim_ir,-hub_offset-wall_thickness*3],
 			[rim_ir-wall_thickness,-hub_offset-wall_thickness],
