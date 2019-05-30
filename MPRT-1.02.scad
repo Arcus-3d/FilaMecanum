@@ -11,14 +11,15 @@
 
 // uncomment each of these, render, print.
 
-// sun();
+//sun();
+idler();
 //planet();
-// housing_ring();
+//housing_ring();
 // need to flip the output ring for printing
 //translate([0,0,output_pilot_h+ring_gear_h]) rotate([0,180,0]) output_ring();
 
 // visualization. Set output_ring_h=0 for a view of the gears.
-view_assembly(explode=0);
+//view_assembly(explode=0);
 //view_cross_section(explode=0);
 
 use <./involute_gears.scad>  // This is not mine.  I've edited it to make it not error in later versions of OpenSCAD though.
@@ -36,16 +37,18 @@ output_r=72/2-0.1; // matches the rim.
 output_pilot_h=3; // thick enough overall to seat either one, or two bearings.
 output_pilot_r=17.3/2; // 17mm bearing plus clearance.
 
-sun_bore_r=6.15/2; // 6mm shaft plus clearance.
+sun_bore_r=6.22/2; // 6mm shaft plus clearance.
 sun_bore_d_shaft=false; // set true for a D shaft
 sun_bore_pin_shaft=true; // set true for a pin through the shaft
 sun_bore_pin_r=2.4/2; // pin radius
-sun_bore_pin_h=2.4/2+1.1; // top of pin slot offset from base of sun gear.
+sun_bore_pin_h=2.4/2+0.75; // top of pin slot offset from base of sun gear.
 sun_bore_pin_l=sun_bore_r*5; // pin length
 
 housing_r=72/2-0.8; // clears the rim.
-housing_pilot_h=2.3; // matches my motor.
+housing_pilot_h=2.35; // matches my motor.
 housing_pilot_r=25.3/2; // motor pilot + clearance
+housing_bolt_offset=19.525; // 4 bolts this far from center, 90 apart.
+housing_bolt_r=4/2;
 gear_wall=3.2; // gear edge thickness
 
 
@@ -60,7 +63,7 @@ ring_gear_h=5; // total height adds pilot heights to this
 // these are good numbers for small-ish 3D printed gears.
 pressure_angle=24;
 clearance=0.2; // extra space at the base/tip of the gear tooth and betwen gears vertically. The base and tip clearance helps with the limitations you hit for corner radii while 3D printing.
-backlash=0.1; // inter-tooth clearance along the tooth profile.
+backlash=0; // inter-tooth clearance along the tooth profile.
 input_twist=150; // helical gears if > 0.  Straight cut gears if 0.
 
 
@@ -136,8 +139,8 @@ module output_ring(ring_gear_h=ring_gear_h,output_pilot_h=output_pilot_h,output_
 }
 
 module planet() {
-	rotate([0,0,360/sun_teeth/1]) gear(number_of_teeth=planet_teeth, diametral_pitch=input_pitch, hub_diameter=0, bore_diameter=planet_cutout_r*2, rim_thickness=ring_gear_h-clearance/2, gear_thickness=ring_gear_h-clearance/2,clearance=clearance, backlash=backlash, twist=input_twist/planet_teeth,pressure_angle=pressure_angle);
-	translate([0,0,ring_gear_h-clearance]) gear(number_of_teeth=planet_teeth, diametral_pitch=output_pitch, hub_diameter=0, bore_diameter=planet_cutout_r*2, rim_thickness=ring_gear_h-clearance/2, gear_thickness=ring_gear_h-clearance/2,clearance=clearance, backlash=backlash, twist=output_twist/planet_teeth,pressure_angle=pressure_angle);
+	rotate([0,0,360/sun_teeth/1.15]) gear(number_of_teeth=planet_teeth, diametral_pitch=input_pitch, hub_diameter=0, bore_diameter=planet_cutout_r*2, rim_thickness=ring_gear_h, gear_thickness=ring_gear_h,clearance=clearance, backlash=backlash, twist=input_twist/planet_teeth,pressure_angle=pressure_angle);
+	translate([0,0,ring_gear_h-clearance/2]) gear(number_of_teeth=planet_teeth, diametral_pitch=output_pitch, hub_diameter=0, bore_diameter=planet_cutout_r*2, rim_thickness=ring_gear_h-clearance/2, gear_thickness=ring_gear_h-clearance/2,clearance=clearance, backlash=backlash, twist=output_twist/planet_teeth,pressure_angle=pressure_angle);
 }
 
 module housing_ring() {
@@ -150,22 +153,36 @@ module housing_ring() {
 			rotate([0,0,360/ring_teeth/1.875]) translate([0,0,housing_pilot_h]) gear(number_of_teeth=ring_teeth, diametral_pitch=input_pitch, hub_diameter=0, bore_diameter=0, rim_thickness=ring_gear_h+extra*4, gear_thickness=ring_gear_h+extra*4,clearance=0,addendum_adjustment=1.15,twist=input_twist/ring_teeth,backlash=-backlash, pressure_angle=pressure_angle );
 			// center pilot cutout
 			translate([0,0,housing_pilot_h/2]) cylinder(r=housing_pilot_r,h=housing_pilot_h+extra*4,center=true);
+			for (i=[0,90,180,270]) rotate([0,0,i]) {
+				hull() {
+					translate([0,housing_bolt_offset,housing_pilot_h+extra+housing_bolt_r/2]) cylinder(r=housing_bolt_r*2,h=extra,center=true);
+					translate([0,housing_bolt_offset,housing_pilot_h+extra-housing_bolt_r/2-housing_bolt_r/3]) cylinder(r1=housing_bolt_r,r2=housing_bolt_r*2,h=housing_bolt_r+clearance+extra*2,center=true);
+				}
+				translate([0,housing_bolt_offset,housing_pilot_h/2]) cylinder(r=housing_bolt_r,h=housing_pilot_h+extra,center=true);
+			}
 		}
 	}
 }
 
 module idler() {
-	difference() {
-		rotate([0,0,360/idler_teeth/1]) gear(number_of_teeth=idler_teeth, diametral_pitch=output_pitch, hub_diameter=output_pitch*sun_teeth, hub_thickness=ring_gear_h-clearance/2, bore_diameter=0, rim_thickness=ring_gear_h-clearance/2, rim_width=0, gear_thickness=ring_gear_h-clearance/2,clearance=clearance, twist=-output_twist/idler_teeth,backlash=backlash, pressure_angle=pressure_angle);
-		translate([0,0,ring_gear_h/2-clearance/4]) cylinder(r1=idler_cutout_r1,r2=idler_cutout_r2,h=ring_gear_h-clearance/2+extra,center=true);
+	intersection() {
+		difference() {
+			rotate([0,0,360/idler_teeth/1]) gear(number_of_teeth=idler_teeth, diametral_pitch=output_pitch, hub_diameter=output_pitch*sun_teeth, hub_thickness=ring_gear_h-clearance/2, bore_diameter=0, rim_thickness=ring_gear_h-clearance/2, rim_width=0, gear_thickness=ring_gear_h-clearance/2,clearance=clearance, twist=-output_twist/idler_teeth,backlash=backlash, pressure_angle=pressure_angle);
+			translate([0,0,ring_gear_h/2-clearance/4]) cylinder(r2=idler_cutout_r1,r1=idler_cutout_r2,h=ring_gear_h-clearance/2+extra,center=true);
+		}
+		translate([0,0,(ring_gear_h-clearance/2)*1.5/3]) cylinder(r1=input_pitch*idler_teeth,r2=0,h=input_pitch*idler_teeth/3,center=true);
 	}
 }
+
 module sun() {
 	difference() {
-		union() {
-			rotate([0,0,360/sun_teeth/1]) gear(number_of_teeth=sun_teeth, diametral_pitch=input_pitch, hub_diameter=input_pitch*sun_teeth, hub_thickness=ring_gear_h-clearance/2, bore_diameter=sun_bore_r*2, rim_thickness=ring_gear_h-clearance/2, rim_width=ring_gear_r/2-sun_bore_r*2.5, gear_thickness=ring_gear_h-clearance/2+1,clearance=clearance, twist=-input_twist/sun_teeth,backlash=backlash, pressure_angle=pressure_angle);
-			// D shaft flat
-			if (sun_bore_d_shaft) translate([sun_bore_r*2/1.9,0,ring_gear_h/2-clearance/4]) cube([sun_bore_r*2/5,sun_bore_r,ring_gear_h-clearance/2],center=true);
+		intersection() {
+			union() {
+				rotate([0,0,360/sun_teeth/1]) gear(number_of_teeth=sun_teeth, diametral_pitch=input_pitch, hub_diameter=input_pitch*sun_teeth, hub_thickness=ring_gear_h-clearance/2, bore_diameter=sun_bore_r*2, rim_thickness=ring_gear_h-clearance/2, rim_width=ring_gear_r/2-sun_bore_r*2.5, gear_thickness=ring_gear_h-clearance/2+0.875,clearance=clearance, twist=-input_twist/sun_teeth,backlash=backlash, pressure_angle=pressure_angle);
+				// D shaft flat
+				if (sun_bore_d_shaft) translate([sun_bore_r*2/1.9,0,ring_gear_h/2-clearance/4]) cube([sun_bore_r*2/5,sun_bore_r,ring_gear_h-clearance/2],center=true);
+			}
+			translate([0,0,(ring_gear_h-clearance/2)*2/3]) cylinder(r1=input_pitch*sun_teeth,r2=0,h=input_pitch*sun_teeth/3,center=true);
 		}
 		if (sun_bore_pin_shaft) translate([0,0,sun_bore_pin_h]) hull() {
 			rotate([0,90,0]) cylinder(r=sun_bore_pin_r,h=sun_bore_pin_l,center=true);
